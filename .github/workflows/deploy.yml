@@ -25,8 +25,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # 根据仓库名自动设置 base：用户站点（xxx.github.io）为 '/'，项目站点为 '/仓库名/'
-      VITEPRESS_BASE: ${{ github.event.repository.name == format('{0}.github.io', github.repository_owner) && '/' || format('/{0}/', github.event.repository.name) }}
+      # 使用自定义域名 blog.n13.club 时站点在根路径，必须用 base: '/'；否则 xxx.github.io/blog/ 的静态资源会 404
+      VITEPRESS_BASE: '/'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
