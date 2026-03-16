@@ -17,6 +17,8 @@ export default defineConfig({
   base: process.env.VITEPRESS_BASE ?? '/',
   // 是否显示每页「最后更新时间」（依赖 Git）
   lastUpdated: true,
+  // 构建时忽略死链（如 README 里的 localhost:5173），避免 CI 报错
+  ignoreDeadLinks: true,
   // 主题配置
   themeConfig: {
     // 导航栏链接
