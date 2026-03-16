@@ -1,0 +1,62 @@
+# 文件路径: blog/.github/workflows/deploy.yml
+# 作用: 推送到 main 分支时自动构建 VitePress 并部署到 GitHub Pages
+# 开发者: 公众号老猫迷
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动触发一次部署
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 的写权限，用于推送到 gh-pages 分支
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 只允许一个并发部署，避免冲突
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # 根据仓库名自动设置 base：用户站点（xxx.github.io）为 '/'，项目站点为 '/仓库名/'
+      VITEPRESS_BASE: ${{ github.event.repository.name == format('{0}.github.io', github.repository_owner) && '/' || format('/{0}/', github.event.repository.name) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install and Build
+        run: npm ci && npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .vitepress/dist
+
+  # 单独 job 用于发布，仅在 main 分支且 source job 成功时运行
+  publish:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
